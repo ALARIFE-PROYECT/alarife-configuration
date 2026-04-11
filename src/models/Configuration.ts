@@ -1,10 +1,4 @@
-import { ConfigurationPostLoader, SecureConfigurationPostLoader } from './ConfigPostLoader';
-import {
-  ArgvConfigurationLoader,
-  ConfigurationLoader,
-  DefaultConfigurationLoader,
-  EnvConfigurationLoader
-} from './ConfigLoader';
+import { ConfigurationLoader } from './ConfigLoader';
 import { ConfigurationState } from './ConfigurationState';
 
 export class Configuration {
@@ -12,37 +6,27 @@ export class Configuration {
    * Lista de loaders
    * * Esta lista debe ir de menos a mas prioridad, para que asi el ultimo sobrescriba los valores anteriores
    */
-  private loaders: ConfigurationLoader[] = [
-    new DefaultConfigurationLoader(), // prioridad 0
-    new EnvConfigurationLoader(), // prioridad 1
-    new ArgvConfigurationLoader() // prioridad 2
-  ];
-
-  private postLoaders: ConfigurationPostLoader[] = [
-    new SecureConfigurationPostLoader() // prioridad 0
-  ];
+  private loaders: ConfigurationLoader[] = [];
 
   private state: ConfigurationState = new ConfigurationState();
 
-  constructor() {
-    this.load();
+  constructor() {}
+
+  private getLoaders(source: ConfigurationLoader[]): ConfigurationLoader[] {
+    return source.sort((a, b) => a.priority - b.priority);
   }
 
-  private load(): void {
-    for (const loader of this.loaders) {
+  public load(): void {
+    for (const loader of this.getLoaders(this.loaders)) {
       loader.load(this.state);
     }
-
-    for (const postLoader of this.postLoaders) {
-      postLoader.load(this.state);
-    }
   }
 
-  getProperty(key: string): any {
-    return this.state.getProperty(key);
+  public addLoader(loader: ConfigurationLoader): void {
+    this.loaders.push(loader);
   }
 
-  toString(): string {
-    return JSON.stringify(this.state, null, 2);
+  public getState(): ConfigurationState {
+    return this.state;
   }
 }

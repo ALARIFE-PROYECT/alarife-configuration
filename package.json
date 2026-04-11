@@ -41,7 +41,6 @@
     "test": "npx tsc --project tsconfig.test.json && node --test \"dist/test/**/*.test.js\""
   },
   "dependencies": {
-    "dotenv": "^17.4.1",
     "tslib": "~2.8"
   },
   "devDependencies": {
