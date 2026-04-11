@@ -1,5 +1,8 @@
 import { ConfigurationState } from '../models/ConfigurationState';
 
+/**
+ * ! para hacer esto, antes necesito thread, el dato mostrado aqui viene por RCP
+ */
 class CtxStore extends ConfigurationState {
   constructor() {
     super();
