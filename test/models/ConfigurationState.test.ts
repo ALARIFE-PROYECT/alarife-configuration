@@ -100,4 +100,24 @@ describe('ConfigurationState', () => {
       assert.equal(state.getProperty('DEBUG_MODE'), true);
     });
   });
+
+  describe('ConfigurationState export/import', () => {
+        it('exports state as JSON and imports into a new Configuration preserving values', () => {
+          const state = new ConfigurationState();
+          state.setProperty({ key: ['DEBUG', 'd', 'DEBUG_MODE'], value: true });
+
+          const exported = state.export();
+
+          state.import(exported);
+    
+          const finalValue = state.getProperty('DEBUG_MODE');
+          assert.strictEqual(finalValue, true);
+        });
+    
+        // Debe lanzar un error si se intenta importar una cadena JSON inválida.
+        it('throws on invalid JSON during import', () => {
+          const state = new ConfigurationState();
+          assert.throws(() => state.import('not-a-json'), /Failed to import configuration state:/);
+        });
+  });
 });
