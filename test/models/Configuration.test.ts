@@ -1,109 +1,55 @@
-// this.loaders = [
-//   // new DefaultConfigurationLoader(), // prioridad 0
-//   // new EnvConfigurationLoader(), // prioridad 1
-//   // new ArgvConfigurationLoader() // prioridad 2
-// ];
-// todos los loades vienen de fuera, TODO ESTO ESTA EN EL CLI
-
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { Configuration } from '../../src/models/Configuration';
 import { ConfigurationLoader } from '../../src/models/ConfigLoader';
 import { ConfigurationState } from '../../src/models/ConfigurationState';
+import { DefaultConfigurationLoader, ArgvConfigurationLoader } from '../mock/mock-loaders';
 
-export class DefaultConfigurationLoader extends ConfigurationLoader {
-  public priority: number = 1;
+describe('Configuration', () => {
+  // Verifica que los loaders se ejecutan en orden de prioridad (menor a mayor).
+  it('loaders execute in ascending priority order', () => {
+    const calls: string[] = [];
 
-  load(state: ConfigurationState): void {
-    // este recorreta la configuracion del comando de commander y añadira al estado:
-    // name, shortName y env
-    // como valor su default value
-  }
-}
+    class RecorderLoader extends ConfigurationLoader {
+      public priority: number;
+      constructor(
+        public id: string,
+        priority: number
+      ) {
+        super();
+        this.priority = priority;
+      }
 
-export class EnvConfigurationLoader extends ConfigurationLoader {
-  public priority: number = 2;
-
-  private loadEnvFile(path: string): Record<string, string> {
-    const configResult = dotenv.config({ path });
-    return configResult.parsed || {};
-  }
-
-  load(state: ConfigurationState): void {
-    // este hara esto, pero su implementacion estara en el CLI
-
-    const environment = state.getProperty(NODE_ENV);
-    if (environment) {
-      const envConfig = this.loadEnvFile(`.env.${environment}`);
-
-      // Object.keys(envConfig).forEach((key) => {
-      //   const appConfig = appConfigurationMap.find((config) => config.envKey === key);
-
-      //   state.setProperty({ argKey: appConfig?.argKey, envKey: key, value: envConfig[key] });
-      // });
+      load(_state: ConfigurationState): void {
+        calls.push(this.id);
+      }
     }
-  }
-}
 
-export class ArgvConfigurationLoader extends ConfigurationLoader {
-  public priority: number = 3;
+    const cfg = new Configuration();
 
-  load(state: ConfigurationState): void {
-    // este recorrera el resultaod del comando de commander y añadira al estado:
-    // name, shortName y env
-    // y el valor que se le ha pasado por linea de comandos
-  }
-}
+    // Add loaders in mixed order; configuration should sort by priority when loading
+    cfg.addLoader(new RecorderLoader('middle', 2));
+    cfg.addLoader(new RecorderLoader('high', 3));
+    cfg.addLoader(new RecorderLoader('low', 1));
 
-//------------------------------------- el post loader tambien esta en el cli
-// el cli configura los parametros de cifrado no el config
+    cfg.load();
 
-// import crypto from 'crypto';
+    assert.deepStrictEqual(calls, ['low', 'middle', 'high']);
+  });
 
-// import { ConfigurationLoader } from './ConfigLoader';
-// import { ConfigurationState } from './ConfigurationState';
-// import { ENCRYPT_KEY } from './ConfigurationEnvKeys';
+  // Comprueba que un loader con mayor prioridad sobrescribe el valor establecido por uno de menor prioridad.
+  it('higher priority loader overrides lower priority value', () => {
+    const option = { name: 'debug', shortName: 'd', env: 'DEBUG_MODE', defaultValue: false };
+    const defaultCommand = { name: 'run', options: [option] };
+    const argvCommand = { name: 'run', options: [option], value: { debug: true } };
 
-// const ALGORITHM = 'aes-256-gcm';
-// const IV_LENGTH = 16;
-// const AUTH_TAG_LENGTH = 16;
-// const CIPHER_PREFIX = 'ENC[';
+    const cfg = new Configuration();
+    cfg.addLoader(new DefaultConfigurationLoader(defaultCommand));
+    cfg.addLoader(new ArgvConfigurationLoader(argvCommand));
 
-// export interface ConfigurationPostLoader extends ConfigurationLoader {}
+    cfg.load();
 
-export class SecureConfigurationLoader extends ConfigurationLoader {
-  public priority: number = 4;
-  // private derivedKey?: Uint8Array;
-
-  // private createDerivedKey(password: string): void {
-  //   this.derivedKey = new Uint8Array(crypto.scryptSync(password, 'salt', 32));
-  // }
-
-  // private decrypt(cipherValue: string): string {
-  //   const payload = Buffer.from(cipherValue.slice(CIPHER_PREFIX.length), 'hex');
-
-  //   const iv = new Uint8Array(payload.subarray(0, IV_LENGTH));
-  //   const authTag = new Uint8Array(payload.subarray(IV_LENGTH, IV_LENGTH + AUTH_TAG_LENGTH));
-  //   const encrypted = new Uint8Array(payload.subarray(IV_LENGTH + AUTH_TAG_LENGTH));
-
-  //   const decipher = crypto.createDecipheriv(ALGORITHM, this.derivedKey!, iv);
-  //   decipher.setAuthTag(authTag);
-
-  //   let decrypted = decipher.update(encrypted, undefined, 'utf8');
-  //   decrypted += decipher.final('utf8');
-  //   return decrypted;
-  // }
-
-  load(state: ConfigurationState): void {
-    // console.log("🚀 ~ SecureConfigurationPostLoader ~ load ~ state:", state)
-    // const encryptKey = 'age12hmtsadz37de2q85tvzvxyqs64h65fm8hlkcy8w93a4m6uglqcmq2rgerk';
-    // if (!encryptKey) {
-    //   return;
-    // }
-    // this.createDerivedKey(encryptKey);
-    // state.forEach((property) => {
-    //   console.log("🚀 ~ SecureConfigurationPostLoader ~ load ~ property:", property)
-    //   if (property.value && typeof property.value === 'string' && property.value.includes(CIPHER_PREFIX)) {
-    //     property.value = this.decrypt(property.value);
-    //     console.log("🚀 ~ SecureConfigurationPostLoader ~ load ~ property.value:", property.value)
-    //   }
-    // });
-  }
-}
+    const finalValue = cfg.getState().getProperty('DEBUG_MODE');
+    assert.strictEqual(finalValue, true);
+  });
+});

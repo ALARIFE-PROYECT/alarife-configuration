@@ -16,14 +16,14 @@ export class Configuration {
     return source.sort((a, b) => a.priority - b.priority);
   }
 
+  public addLoader(loader: ConfigurationLoader): void {
+    this.loaders.push(loader);
+  }
+
   public load(): void {
     for (const loader of this.getLoaders(this.loaders)) {
       loader.load(this.state);
     }
-  }
-
-  public addLoader(loader: ConfigurationLoader): void {
-    this.loaders.push(loader);
   }
 
   public getState(): ConfigurationState {
