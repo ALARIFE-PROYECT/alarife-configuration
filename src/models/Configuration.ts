@@ -10,7 +10,9 @@ export class Configuration {
 
   private state: ConfigurationState = new ConfigurationState();
 
-  constructor() {}
+  constructor(...loaders: ConfigurationLoader[]) {
+    this.loaders = loaders;
+  }
 
   private getLoaders(source: ConfigurationLoader[]): ConfigurationLoader[] {
     return source.sort((a, b) => a.priority - b.priority);

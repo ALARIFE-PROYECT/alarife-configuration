@@ -90,7 +90,7 @@ abstract class ConfigurationLoader {
 High-level coordinator that registers loaders and applies them against a single `ConfigurationState`.
 
 ```typescript
-const config = new Configuration();
+const config = new Configuration(...loaders?: ConfigurationLoader[]);
 ```
 
 | Method | Description |
