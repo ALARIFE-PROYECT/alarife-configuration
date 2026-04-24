@@ -22,10 +22,12 @@ export class Configuration {
     this.loaders.push(loader);
   }
 
-  public load(): void {
+  public load(): ConfigurationState {
     for (const loader of this.getLoaders(this.loaders)) {
       loader.load(this.state);
     }
+
+    return this.state;
   }
 
   public getState(): ConfigurationState {
