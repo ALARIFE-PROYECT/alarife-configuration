@@ -114,6 +114,7 @@ const state = new ConfigurationState();
 | `getProperty(key: string): any` | Return the value of the property that contains `key` in its alias list, or `undefined` if not present. |
 | `setProperty(source: SourceProperty): void` | Add or update a property. Rules: each alias in `source.key` must be unique across all properties (otherwise a `Duplicate key` error is thrown). When updating an existing property you may add new aliases only if the incoming `source.key` includes all existing aliases — omitting existing aliases while adding new ones will throw an error. |
 | `forEach(callback: (property: SourceProperty) => void): void` | Iterate over all stored properties. |
+| `toArray(): SourceProperty[]` | Allows retrieving the stored parameter list |
 | `export(): string` | Serialize the current state to a JSON string. |
 | `import(data: string): void` | Parse JSON and import properties via `setProperty`. Throws an error on parse failure or invalid updates. |
 

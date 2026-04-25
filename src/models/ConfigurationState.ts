@@ -111,6 +111,15 @@ export class ConfigurationState {
   }
 
   /**
+   * Exports the configuration state as an array of SourceProperty objects.
+   * 
+   * @returns 
+   */
+  public toArray(): SourceProperty[] {
+    return this.state;
+  }
+
+  /**
    * Exports the configuration state as a JSON string.
    *
    * @returns
