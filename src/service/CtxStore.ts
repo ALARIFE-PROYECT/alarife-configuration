@@ -1,17 +1,16 @@
 import { ConfigurationState } from '../models/ConfigurationState';
 
 /**
- * ! para hacer esto, antes necesito thread, el dato mostrado aqui viene por RCP
+ * CtxStore is a specialized configuration state that can be initialized from an environment variable.
  */
-class CtxStore extends ConfigurationState {
-  constructor() {
+export class CtxStore extends ConfigurationState {
+  constructor(inputState?: string) {
     super();
-    this.importState();
-  }
 
-  private importState(): void {
-    // buscar el estado en el process.argv
-    // rellenar this.state con el estado encontrado
+    const state = inputState ?? process.env.CONFIGURATION_STATE;
+    if (state) {
+      this.import(state);
+    }
   }
 }
 

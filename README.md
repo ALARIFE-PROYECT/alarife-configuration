@@ -147,6 +147,24 @@ Notes:
 - Error behavior: the library throws `Error` when encountering duplicate keys, invalid alias updates, or when `import()` receives invalid JSON.
 - Recommended priority ordering: `1` = defaults, `2` = environment variables, `3` = command-line arguments (higher number wins).
 
+### `CtxStore`
+
+This service is used as a bridge at runtime after configuration in the main CLI thread.
+
+```typescript
+/** Service use Manual */
+const store = new CtxStore();
+
+/** Service use automatic */
+import { ctxStore } from '@alarife/configuration';
+```
+
+Notes:
+
+- This service is an extension of `ConfigurationState`.
+- The instantiated form of this functionality accesses the `CONFIGURATION_STATE` environment variable
+
+
 ## 📄 License
 
 This project is licensed under Apache-2.0. See the [LICENSE](./LICENSE) file for details.
