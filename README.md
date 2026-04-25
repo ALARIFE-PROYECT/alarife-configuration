@@ -33,8 +33,8 @@ import { Configuration, ConfigurationLoader } from '@alarife/configuration';
 class DefaultLoader extends ConfigurationLoader {
 	public priority = 1;
 	private defaults = [
-		{ key: ['port', 'PORT'], value: 3000 },
-		{ key: ['debug', 'DEBUG_MODE'], value: false },
+		{ argv: 'port', env: 'PORT', value: 3000 },
+		{ argv: 'debug', env: 'DEBUG_MODE', value: false },
 	];
 
 	load(state) {
@@ -48,10 +48,10 @@ class EnvLoader extends ConfigurationLoader {
 	public priority = 2;
 	load(state) {
 		if (process.env.PORT) {
-			state.setProperty({ key: ['port', 'PORT'], value: Number(process.env.PORT) });
+			state.setProperty({ argv: 'port', env: 'PORT', value: Number(process.env.PORT) });
 		}
 		if (typeof process.env.DEBUG_MODE !== 'undefined') {
-			state.setProperty({ key: ['debug', 'DEBUG_MODE'], value: process.env.DEBUG_MODE === 'true' });
+			state.setProperty({ argv: 'debug', env: 'DEBUG_MODE', value: process.env.DEBUG_MODE === 'true' });
 		}
 	}
 }
@@ -117,7 +117,7 @@ const state = new ConfigurationState();
 | `export(): string` | Serialize the current state to a JSON string. |
 | `import(data: string): void` | Parse JSON and import properties via `setProperty`. Throws an error on parse failure or invalid updates. |
 
----
+--- 
 
 ### `SourceProperty`
 
@@ -125,17 +125,21 @@ Interface describing a property and its aliases.
 
 ```typescript
 interface SourceProperty {
-	key: string[];
+	argv: string;
+	shortArgv?: string;
+	env: string;
 	value: any;
 }
 ```
 
 | Property | Description |
 |---|---|
-| `key: string[]` | Array of alias names for the same property (e.g. `['debug', 'd', 'DEBUG_MODE']`). Any alias may be used to read or update the property. |
+| `argv: string` | Alias for the command-line argument. |
+| `shortArgv?: string` | Optional alias for a shorter version of the command-line argument. |
+| `env: string` | Alias for the environment variable. |
 | `value: any` | The property's value (string, number, boolean, object, ...). |
 
----
+--- 
 
 Notes:
 
@@ -146,7 +150,7 @@ Notes:
 
 This project is licensed under Apache-2.0. See the [LICENSE](./LICENSE) file for details.
 
----
+--- 
 
 <div align="center">
 
