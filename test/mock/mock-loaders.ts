@@ -10,7 +10,7 @@ export class DefaultConfigurationLoader extends ConfigurationLoader {
 
   load(state: ConfigurationState): void {
     this.command.options.forEach((option) => {
-      state.setProperty({ key: [option.env, option.name, option.shortName], value: option.defaultValue });
+      state.setProperty({ argv: option.name, shortArgv:option.shortName, env: option.env, value: option.defaultValue });
     });
   }
 }
@@ -24,7 +24,7 @@ export class ArgvConfigurationLoader extends ConfigurationLoader {
 
   load(state: ConfigurationState): void {
     this.command.options.forEach((option) => {
-      state.setProperty({ key: [option.env, option.name, option.shortName], value: this.command.value[option.name] });
+      state.setProperty({ argv: option.name, shortArgv: option.shortName, env: option.env, value: this.command.value[option.name] });
     });
   }
 }

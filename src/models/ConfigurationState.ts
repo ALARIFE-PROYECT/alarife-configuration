@@ -1,3 +1,5 @@
+import { env } from 'process';
+
 export interface SourceProperty {
   /**
    * Clave del argumento en linea de comandos.
@@ -7,10 +9,16 @@ export interface SourceProperty {
    * por ejemplo: node app.js --debug
    * por ejemplo: node app.js -d
    *
-   * key: ['debug', 'd', 'DEBUG_MODE']
+   * argv: 'debug'
+   * shortArgv: 'd'
+   * env: 'DEBUG_MODE'
    * valor: true
    */
-  key: string[];
+  argv?: string;
+
+  shortArgv?: string;
+
+  env?: string;
 
   value: any;
 }
@@ -20,6 +28,24 @@ export class ConfigurationState {
 
   protected state: SourceProperty[] = [];
 
+  constructor() {}
+
+  private addKey(existing: SourceProperty, source: SourceProperty, keyType: 'argv' | 'shortArgv' | 'env'): void {
+    if (source[keyType] !== existing[keyType]) { // significa que se intenta cambiar el keyType
+
+      // no se permite reasignar keys
+      if (existing[keyType] && source[keyType]) { // significa que ya existe un keyType y se intenta cambiar a otro valor
+        throw new Error(`Cannot change ${keyType} from '${existing[keyType]}' to '${source[keyType]}'`);
+      }
+
+      // Si el source tiene un keyType que el existing no tiene, se agrega ese keyType al existing
+      if (source[keyType]) {
+        existing[keyType] = source[keyType]; // asigna el nuevo keyType al existing
+        this.keys.add(source[keyType]);
+      }
+    }
+  }
+
   /**
    * Retrieves the value of a property by its key.
    *
@@ -27,7 +53,7 @@ export class ConfigurationState {
    * @returns
    */
   public getProperty(key: string): any {
-    const property = this.state.find((prop) => prop.key.includes(key));
+    const property = this.state.find((prop) => prop.argv === key || prop.shortArgv === key || prop.env === key);
     return property ? property.value : undefined;
   }
 
@@ -37,49 +63,40 @@ export class ConfigurationState {
    * @param source
    */
   public setProperty(source: SourceProperty): void {
-    // Find property with any of the keys
-    const existing = this.state.find((prop) => prop.key.some((k) => source.key.includes(k)));
-
-    // Validate uniqueness of all keys (skip keys that belong to the property being updated)
-    for (const key of source.key) {
-      if (this.keys.has(key) && (!existing || !existing.key.includes(key))) {
-        throw new Error(`Duplicate key: '${key}'`);
-      }
+    // Validate that the source has at least one key (env or argv)
+    if (!source.env && !source.argv && !source.shortArgv) {
+      throw new Error('Source must have at least one key (env, argv, or shortArgv)');
     }
 
+    // Find property with any of the keys
+    const existing = this.state.find(
+      (st) =>
+        (source.argv && st.argv === source.argv) ||
+        (source.shortArgv && st.shortArgv === source.shortArgv) ||
+        (source.env && st.env === source.env)
+    );
+
     if (existing) {
-      // Ensure all existing keys are present in source before allowing new ones
-      const incomingKeys = new Set(source.key);
-      const newKeys = source.key.filter((k) => !existing.key.includes(k));
+      this.addKey(existing, source, 'argv');
+      this.addKey(existing, source, 'shortArgv');
+      this.addKey(existing, source, 'env');
 
-      if (newKeys.length > 0) {
-        const missingKeys = existing.key.filter((k) => !incomingKeys.has(k));
-        if (missingKeys.length > 0) {
-          throw new Error(
-            `Cannot add new key(s) [${newKeys.join(', ')}]: missing existing key(s) [${missingKeys.join(', ')}]`
-          );
-        }
-      }
-
-      // If a source key is missing from the existing list, add it.
-      for (const key of source.key) {
-        if (!existing.key.includes(key)) {
-          existing.key.push(key);
-
-          // Index new keys of the existing property
-          this.keys.add(key);
-        }
-      }
-
-      // Update existing property
       existing.value = source.value;
     } else {
       // Add new property
       this.state.push(source);
 
-      // Index all keys of the new property
-      for (const key of source.key) {
-        this.keys.add(key);
+      // Index the new property
+      if (source.argv) {
+        this.keys.add(source.argv);
+      }
+
+      if (source.shortArgv) {
+        this.keys.add(source.shortArgv);
+      }
+
+      if (source.env) {
+        this.keys.add(source.env);
       }
     }
   }
