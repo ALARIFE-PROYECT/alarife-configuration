@@ -1,4 +1,4 @@
-import { ConfigurationState } from '../models/ConfigurationState';
+import { ConfigurationState, SourceProperty } from '../models/ConfigurationState';
 
 /**
  * CtxStore is a specialized configuration state that can be initialized from an environment variable.
@@ -11,6 +11,10 @@ export class CtxStore extends ConfigurationState {
     if (state) {
       this.import(state);
     }
+  }
+
+  *[Symbol.iterator](): IterableIterator<SourceProperty> {
+    yield* this.state;
   }
 }
 
